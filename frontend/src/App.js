@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Box, Container, CssBaseline } from '@mui/material';
 import Layout from './components/Layout';
@@ -12,6 +12,7 @@ import About from './pages/legal/About';
 import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
+import CookieConsent from './components/CookieConsent';
 
 // Import all tool components
 import OhmsLawCalculator from './tools/electronic/OhmsLawCalculator';
@@ -38,6 +39,7 @@ import ColorPicker from './tools/software/ColorPicker';
 import ImageConverter from './tools/software/ImageConverter';
 import AsciiTable from './tools/software/AsciiTable';
 import TerminalControls from './tools/software/TerminalControls';
+import ReactGA from 'react-ga4';
 
 const theme = createTheme({
   palette: {
@@ -147,11 +149,27 @@ const theme = createTheme({
   },
 });
 
+// Analytics tracker component
+function RouteTracker() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const consent = localStorage.getItem('cookieConsent');
+    const measurementId = process.env.REACT_APP_GA_MEASUREMENT_ID;
+    if (consent === 'accepted' && measurementId) {
+      ReactGA.send({ hitType: "pageview", page: location.pathname });
+    }
+  }, [location]);
+
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        <RouteTracker />
         <Box>
           <Layout>
             <Container maxWidth="xl">
@@ -209,6 +227,7 @@ function App() {
             </Container>
           </Layout>
         </Box>
+        <CookieConsent />
       </Router>
     </ThemeProvider>
   );

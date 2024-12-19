@@ -32,13 +32,12 @@ function Terms() {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h6" gutterBottom>
-            Advertising
+            Analytics and Tracking
           </Typography>
           <Typography paragraph>
-            Tech Tools displays advertisements provided by Google AdSense. By using our service, you agree 
-            to receive these advertisements. While we strive to ensure advertisements are appropriate and 
-            relevant, we are not responsible for the content of these advertisements. Any interaction with 
-            these advertisements is subject to Google's terms and policies.
+            Tech Tools uses Google Analytics to understand how our services are used and to improve user experience. 
+            By using our service, you agree to the collection and use of usage data as described in our Privacy Policy. 
+            You can opt out of analytics tracking using methods described in our Privacy Policy.
           </Typography>
         </Box>
 
@@ -49,7 +48,18 @@ function Terms() {
           <Typography paragraph>
             The tools and calculations provided are for reference purposes only. Users should independently 
             verify all results. We are not responsible for any damages or losses resulting from the use 
-            of our tools.
+            of our tools or services.
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Privacy and Data Collection
+          </Typography>
+          <Typography paragraph>
+            Your use of Tech Tools is also governed by our Privacy Policy, which describes how we collect,
+            use, and protect your data. By using our services, you consent to the data practices described
+            in our Privacy Policy.
           </Typography>
         </Box>
 
@@ -58,11 +68,15 @@ function Terms() {
             Modifications
           </Typography>
           <Typography paragraph>
-            We reserve the right to modify or discontinue any aspect of Tech Tools at any time. Changes 
-            to these terms will be effective immediately upon posting on this page.
+            We reserve the right to modify these terms at any time. Changes will be effective immediately 
+            upon posting to this page. Your continued use of Tech Tools after any changes indicates your 
+            acceptance of the modified terms.
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Last updated: December 2024
+        </Box>
+
+        <Box>
+          <Typography variant="body2" color="text.secondary">
+            Last updated: December 19, 2024
           </Typography>
         </Box>
       </Paper>
