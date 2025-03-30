@@ -151,6 +151,15 @@ const applyHighlights = (data, format, highlights) => {
     return result;
 };
 
+const formatTimestamp = () => {
+    const now = new Date();
+    console.log('Creating timestamp with Date object:', now);
+    const pad = (n) => n.toString().padStart(2, '0');
+    const formatted = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${pad(now.getMilliseconds()).slice(0,3)}`;
+    console.log('Formatted timestamp:', formatted);
+    return formatted;
+};
+
 const SerialTerminal = () => {
     const theme = useTheme();
     const [port, setPort] = useState(null);
@@ -221,11 +230,13 @@ const SerialTerminal = () => {
     }, [receivedData, autoScroll]);
 
     const processIncomingData = (value) => {
+        console.log('Processing incoming data:', value);
         const now = Date.now();
         
         // Debug raw incoming data
         const decoder = new TextDecoder();
         const rawData = decoder.decode(value);
+        console.log('Decoded raw data:', rawData);
         
         // Combine new data with existing buffer
         const newBuffer = new Uint8Array(dataBuffer.length + value.length);
@@ -234,11 +245,13 @@ const SerialTerminal = () => {
         
         // Convert entire buffer to string
         const fullText = decoder.decode(newBuffer);
+        console.log('Full text from buffer:', fullText);
 
         // Process the data immediately if it contains a complete line
         if (fullText.includes('\n') || fullText.includes('\r')) {
             // Split on any type of newline while preserving empty lines
             const lines = fullText.split(/(\r\n|\n\r|\n|\r)/);
+            console.log('Split lines:', lines);
             
             // Process all complete lines
             const completeLines = [];
@@ -251,14 +264,22 @@ const SerialTerminal = () => {
             }
             
             if (completeLines.length > 0) {
-                setReceivedData(oldData => [
-                    ...oldData,
-                    ...completeLines.map(line => ({
-                        timestamp: new Date().toLocaleString(),
+                console.log('Complete lines to process:', completeLines);
+                const newData = completeLines.map(line => {
+                    const timestamp = formatTimestamp();
+                    console.log('Created timestamp for line:', timestamp);
+                    return {
+                        timestamp,
                         data: new TextEncoder().encode(line),
                         type: 'incoming'
-                    }))
-                ].slice(-5000));
+                    };
+                });
+                console.log('New data objects:', newData);
+                setReceivedData(oldData => {
+                    const updated = [...oldData, ...newData].slice(-5000);
+                    console.log('Updated received data:', updated);
+                    return updated;
+                });
             }
             
             // Store any remaining incomplete data in the buffer
@@ -284,7 +305,7 @@ const SerialTerminal = () => {
                 setReceivedData(oldData => [
                     ...oldData,
                     {
-                        timestamp: new Date().toLocaleString(),
+                        timestamp: formatTimestamp(),
                         data: dataBuffer,
                         type: 'incoming'
                     }
@@ -371,7 +392,7 @@ const SerialTerminal = () => {
                     buffer += decoder.decode(value, { stream: true });
                     
                     // Split on newlines, keeping the last partial line in the buffer
-                    const lines = buffer.split(/\r\n|\n|\r/);
+                    const lines = buffer.split(/\r\n|\n\r|\n|\r/);
                     buffer = lines.pop() || ''; // Keep the last partial line in buffer
                     
                     // Add complete lines to display
@@ -379,7 +400,7 @@ const SerialTerminal = () => {
                         setReceivedData(oldData => [
                             ...oldData,
                             ...lines.map(line => ({
-                                timestamp: new Date().toLocaleString(),
+                                timestamp: formatTimestamp(),
                                 data: new TextEncoder().encode(line + '\n'),
                                 type: 'incoming'
                             }))
@@ -397,7 +418,7 @@ const SerialTerminal = () => {
             setReceivedData(oldData => [
                 ...oldData,
                 {
-                    timestamp: new Date().toLocaleString(),
+                    timestamp: formatTimestamp(),
                     data: new TextEncoder().encode(buffer),
                     type: 'incoming'
                 }
@@ -531,7 +552,7 @@ const SerialTerminal = () => {
             // Add to history and display
             if (dataToSend.length > 0) {
                 addToHistory(sendData.trim());
-                const timestamp = new Date().toLocaleString();
+                const timestamp = formatTimestamp();
                 setReceivedData(prev => [...prev, {
                     timestamp,
                     data: sendFormat === 'ascii' ? sendData + (lineEnding !== 'none' ? ` [${lineEnding}]` : '') : 
@@ -581,7 +602,13 @@ const SerialTerminal = () => {
     };
 
     // Helper function to format timestamp in local timezone
-    const formatLocalTime = (date) => {
+    const formatLocalTime = (timestamp) => {
+        // If timestamp is already formatted (contains :), return as is
+        if (typeof timestamp === 'string' && timestamp.includes(':')) {
+            return timestamp;
+        }
+        // Otherwise treat as Date object
+        const date = new Date(timestamp);
         return date.toLocaleTimeString(undefined, {
             hour: '2-digit',
             minute: '2-digit',
@@ -745,41 +772,43 @@ const SerialTerminal = () => {
 
             <Grid container spacing={3}>
                 <Grid item xs={12} md={8}>
-                    <Paper 
-                        ref={terminalRef}
-                        variant="outlined" 
-                        sx={{ 
-                            p: 2, 
-                            height: 'calc(100vh - 380px)', 
-                            overflowY: 'auto',
-                            backgroundColor: 'black',
-                            fontFamily: 'monospace',
-                            color: 'lightgreen'
-                        }}
-                    >
-                        {receivedData.map((item, index) => (
-                            <Box key={index} sx={{ mb: 0.5, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                                <span style={{ color: 'gray', marginRight: '8px' }}>
-                                    {item.timestamp ? formatLocalTime(new Date(item.timestamp)) : ''}
-                                </span>
-                                {' '}
-                                <Typography
-                                    component="span"
-                                    sx={{
-                                        color: item.type === 'outgoing' ? 'success.main' : 'info.main'
-                                    }}
-                                >
-                                    {applyHighlights(
-                                        item.type === 'incoming' 
-                                            ? renderData(item)
-                                            : item.data,
-                                        displayFormat,
-                                        highlights
-                                    )}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Paper>
+                <Paper 
+                    ref={terminalRef}
+                    variant="outlined" 
+                    sx={{ 
+                        p: 2, 
+                        height: 'calc(100vh - 380px)', 
+                        overflowY: 'auto',
+                        backgroundColor: 'black',
+                        fontFamily: '"Courier New", Courier, monospace', // Explicitly set monospaced font
+                        color: 'lightgreen'
+                    }}
+                >
+                    {receivedData.map((item, index) => (
+                        <Box key={index} sx={{ mb: 0.5, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                            <span style={{ color: 'gray', marginRight: '8px' }}>
+                                {item.timestamp ? formatLocalTime(item.timestamp) : ''}
+                            </span>
+                            {' '}
+                            <Typography
+                                component="span"
+                                sx={{
+                                    fontFamily: '"Courier New", Courier, monospace', // Ensure monospaced font
+                                    fontWeight: 'bold',
+                                    color: item.type === 'outgoing' ? 'success.main' : 'info.main'
+                                }}
+                            >
+                                {applyHighlights(
+                                    item.type === 'incoming' 
+                                        ? renderData(item)
+                                        : item.data,
+                                    displayFormat,
+                                    highlights
+                                )}
+                            </Typography>
+                        </Box>
+                    ))}
+                </Paper>
                 </Grid>
 
                 <Grid item xs={12} md={4}>
